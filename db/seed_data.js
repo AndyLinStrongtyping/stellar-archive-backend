@@ -47,6 +47,14 @@ const PLANETS = [
   { id: 'p14', galaxyId: 'market', type: 'skill', name: '成長飛輪', en: 'Growth Flywheel', coord: 'MK-436', difficulty: 4, uses: 410, summary: '設計自我強化的成長循環。', body: '為產品設計成長飛輪，列出各環節的槓桿與衡量指標。' },
 ];
 
+const DEFAULT_PLANET_METADATA = {
+  author: 'Stellar Archive Team',
+  sourceUrl: null,
+  license: '未指定',
+  compatibleAgents: ['ChatGPT', 'Claude', 'Gemini'],
+  version: '1.0.0',
+};
+
 const userSql = `
   INSERT INTO users (id, name, email, password_hash, role)
   VALUES ($1, $2, $3, $4, $5)
@@ -71,8 +79,9 @@ const galaxySql = `
 
 const planetSql = `
   INSERT INTO planets
-    (id, galaxy_id, type, name, en, coord, difficulty, uses, summary, body)
-  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    (id, galaxy_id, type, name, en, coord, difficulty, uses, summary, body,
+     author, source_url, license, compatible_agents, version)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
   ON CONFLICT (id) DO UPDATE SET
     galaxy_id = EXCLUDED.galaxy_id,
     type = EXCLUDED.type,
@@ -83,6 +92,11 @@ const planetSql = `
     uses = EXCLUDED.uses,
     summary = EXCLUDED.summary,
     body = EXCLUDED.body,
+    author = EXCLUDED.author,
+    source_url = EXCLUDED.source_url,
+    license = EXCLUDED.license,
+    compatible_agents = EXCLUDED.compatible_agents,
+    version = EXCLUDED.version,
     updated_at = CURRENT_TIMESTAMP
 `;
 
@@ -128,6 +142,11 @@ async function seedDatabase() {
         planet.uses,
         planet.summary,
         planet.body,
+        planet.author ?? DEFAULT_PLANET_METADATA.author,
+        planet.sourceUrl ?? DEFAULT_PLANET_METADATA.sourceUrl,
+        planet.license ?? DEFAULT_PLANET_METADATA.license,
+        planet.compatibleAgents ?? DEFAULT_PLANET_METADATA.compatibleAgents,
+        planet.version ?? DEFAULT_PLANET_METADATA.version,
       ]);
     }
 

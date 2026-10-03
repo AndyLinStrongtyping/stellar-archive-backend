@@ -52,6 +52,11 @@ CREATE TABLE IF NOT EXISTS planets (
     uses INTEGER NOT NULL DEFAULT 0,    -- 使用次數，預設為 0
     summary TEXT NOT NULL,              -- 摘要說明
     body TEXT NOT NULL,                 -- 內文詳細內容
+    author VARCHAR(150) NOT NULL DEFAULT 'Stellar Archive Team', -- 作者 / 維護者
+    source_url TEXT,                    -- 原始來源（可為空）
+    license VARCHAR(100) NOT NULL DEFAULT '未指定', -- 使用授權
+    compatible_agents TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[], -- 相容 AI Agent
+    version VARCHAR(50) NOT NULL DEFAULT '1.0.0', -- 內容版本
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- 建立時間
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- 更新時間
     CONSTRAINT planets_galaxy_fk
@@ -63,6 +68,13 @@ CREATE TABLE IF NOT EXISTS planets (
     CONSTRAINT planets_difficulty_check CHECK (difficulty BETWEEN 1 AND 5),  -- 限制難度範圍為 1~5
     CONSTRAINT planets_uses_check CHECK (uses >= 0)  -- 使用次數不可為負數
 );
+
+-- 讓已存在的開發資料庫也能以同一份 schema 補上可信度 metadata。
+ALTER TABLE planets ADD COLUMN IF NOT EXISTS author VARCHAR(150) NOT NULL DEFAULT 'Stellar Archive Team';
+ALTER TABLE planets ADD COLUMN IF NOT EXISTS source_url TEXT;
+ALTER TABLE planets ADD COLUMN IF NOT EXISTS license VARCHAR(100) NOT NULL DEFAULT '未指定';
+ALTER TABLE planets ADD COLUMN IF NOT EXISTS compatible_agents TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE planets ADD COLUMN IF NOT EXISTS version VARCHAR(50) NOT NULL DEFAULT '1.0.0';
 
 -- 針對 galaxy_id 建立索引，加速依銀河查詢星球的效能
 CREATE INDEX IF NOT EXISTS planets_galaxy_id_idx

@@ -44,6 +44,32 @@ const PlanetEntity = new EntitySchema({
     body: {
       type: 'text',
     },
+    author: {
+      type: 'varchar',
+      length: 150,
+      default: 'Stellar Archive Team',
+    },
+    sourceUrl: {
+      name: 'source_url',
+      type: 'text',
+      nullable: true,
+    },
+    license: {
+      type: 'varchar',
+      length: 100,
+      default: '未指定',
+    },
+    compatibleAgents: {
+      name: 'compatible_agents',
+      type: 'text',
+      array: true,
+      default: () => "ARRAY[]::text[]",
+    },
+    version: {
+      type: 'varchar',
+      length: 50,
+      default: '1.0.0',
+    },
     createdAt: {
       name: 'created_at',
       type: 'timestamptz',

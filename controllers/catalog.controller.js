@@ -1,7 +1,9 @@
 const { pool } = require('../db/pg');
 
 const planetColumns = `id, galaxy_id AS galaxy, type, name, en, coord,
-  difficulty, uses, summary, body`;
+  difficulty, uses, summary, body, author, source_url AS "sourceUrl",
+  license, compatible_agents AS "compatibleAgents", version,
+  updated_at AS "updatedAt"`;
 
 const normalize = (value) => String(value ?? '').trim();
 
@@ -50,7 +52,8 @@ const searchPlanets = async (req, res, next) => {
     if (keyword) {
       values.push(`%${keyword}%`);
       clauses.push(`(name ILIKE $${values.length} OR en ILIKE $${values.length}
-        OR summary ILIKE $${values.length} OR body ILIKE $${values.length})`);
+        OR summary ILIKE $${values.length} OR body ILIKE $${values.length}
+        OR author ILIKE $${values.length})`);
     }
     if (galaxy) {
       values.push(galaxy);

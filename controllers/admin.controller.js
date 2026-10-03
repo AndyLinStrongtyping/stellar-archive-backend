@@ -1,5 +1,10 @@
 const { pool } = require("../db/pg");
 
+const planetColumns = `id, galaxy_id AS galaxy, type, name, en, coord,
+  difficulty, uses, summary, body, author, source_url AS "sourceUrl",
+  license, compatible_agents AS "compatibleAgents", version,
+  updated_at AS "updatedAt"`;
+
 
 //取得星系
 const getGalaxies = async (req, res) => {
@@ -87,9 +92,7 @@ const deleteGalaxy = async (req, res) => {
 //取得&篩選行星
 const getPlanets = async (req, res) => {
     const { galaxy } = req.query;
-    const baseSql = `SELECT id, galaxy_id AS galaxy, type, name, en, coord,
-                            difficulty, uses, summary, body
-                     FROM planets`;
+    const baseSql = `SELECT ${planetColumns} FROM planets`;
     const result = galaxy
         ? await pool.query(`${baseSql} WHERE galaxy_id = $1 ORDER BY created_at, id`, [galaxy])
         : await pool.query(`${baseSql} ORDER BY created_at, id`);
@@ -118,6 +121,11 @@ const createPlanet = async (req, res) => {
         uses,
         summary,
         body,
+        author,
+        sourceUrl,
+        license,
+        compatibleAgents,
+        version,
     } = req.body;
 
     const client = await pool.connect();
@@ -133,11 +141,27 @@ const createPlanet = async (req, res) => {
         );
         const result = await client.query(
             `INSERT INTO planets
-                (id, galaxy_id, type, name, en, coord, difficulty, uses, summary, body)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-             RETURNING id, galaxy_id AS galaxy, type, name, en, coord,
-                       difficulty, uses, summary, body`,
-            [idResult.rows[0].id, galaxy, type, name, en, coord, difficulty, uses ?? 0, summary, body]
+                (id, galaxy_id, type, name, en, coord, difficulty, uses, summary,
+                 body, author, source_url, license, compatible_agents, version)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+             RETURNING ${planetColumns}`,
+            [
+                idResult.rows[0].id,
+                galaxy,
+                type,
+                name,
+                en,
+                coord,
+                difficulty,
+                uses ?? 0,
+                summary,
+                body,
+                author,
+                sourceUrl || null,
+                license,
+                Array.isArray(compatibleAgents) ? compatibleAgents : [],
+                version,
+            ]
         );
         newPlanet = result.rows[0];
         await client.query("COMMIT");
@@ -168,8 +192,28 @@ const updatePlanet = async (req, res) => {
         "uses",
         "summary",
         "body",
+        "author",
+        "sourceUrl",
+        "license",
+        "compatibleAgents",
+        "version",
     ];
-    const columnMap = { galaxy: "galaxy_id", type: "type", name: "name", en: "en", coord: "coord", difficulty: "difficulty", uses: "uses", summary: "summary", body: "body" };
+    const columnMap = {
+        galaxy: "galaxy_id",
+        type: "type",
+        name: "name",
+        en: "en",
+        coord: "coord",
+        difficulty: "difficulty",
+        uses: "uses",
+        summary: "summary",
+        body: "body",
+        author: "author",
+        sourceUrl: "source_url",
+        license: "license",
+        compatibleAgents: "compatible_agents",
+        version: "version",
+    };
     const values = [];
     const assignments = [];
 
@@ -189,8 +233,7 @@ const updatePlanet = async (req, res) => {
         `UPDATE planets
          SET ${assignments.join(", ")}, updated_at = CURRENT_TIMESTAMP
          WHERE id = $${values.length}
-         RETURNING id, galaxy_id AS galaxy, type, name, en, coord,
-                   difficulty, uses, summary, body`,
+         RETURNING ${planetColumns}`,
         values
     );
 
@@ -206,8 +249,7 @@ const deletePlanet = async (req, res) => {
     const result = await pool.query(
         `DELETE FROM planets
          WHERE id = $1
-         RETURNING id, galaxy_id AS galaxy, type, name, en, coord,
-                   difficulty, uses, summary, body`,
+         RETURNING ${planetColumns}`,
         [req.params.id]
     );
 

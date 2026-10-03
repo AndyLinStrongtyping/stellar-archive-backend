@@ -61,6 +61,9 @@ const validateCreatePlanet = (req, res, next) => {
         difficulty,
         summary,
         body,
+        author,
+        license,
+        version,
     } = req.body ?? {};
 
     if (
@@ -71,7 +74,10 @@ const validateCreatePlanet = (req, res, next) => {
         !coord ||
         difficulty === undefined ||
         !summary ||
-        !body
+        !body ||
+        !author ||
+        !license ||
+        !version
     ) {
         return res.status(400).json({
             message: "欄位資料不完整",
@@ -86,7 +92,10 @@ const validateCreatePlanet = (req, res, next) => {
 const findPlanetById = async (req, res, next) => {
     const result = await pool.query(
         `SELECT id, galaxy_id AS galaxy, type, name, en, coord,
-                difficulty, uses, summary, body
+                difficulty, uses, summary, body, author,
+                source_url AS "sourceUrl", license,
+                compatible_agents AS "compatibleAgents", version,
+                updated_at AS "updatedAt"
          FROM planets
          WHERE id = $1`,
         [req.params.id]

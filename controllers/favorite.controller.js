@@ -5,7 +5,10 @@ const getFavorites = async (req, res) => {
   const result = await pool.query(
     `SELECT f.id AS favorite_id, f.created_at AS favorited_at,
             p.id, p.galaxy_id AS galaxy, p.type, p.name, p.en, p.coord,
-            p.difficulty, p.uses, p.summary, p.body
+            p.difficulty, p.uses, p.summary, p.body, p.author,
+            p.source_url AS "sourceUrl", p.license,
+            p.compatible_agents AS "compatibleAgents", p.version,
+            p.updated_at AS "updatedAt"
      FROM favorites AS f
      JOIN planets AS p ON p.id = f.planets_id
      WHERE f.user_id = $1
