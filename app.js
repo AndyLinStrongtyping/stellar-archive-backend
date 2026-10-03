@@ -1,21 +1,19 @@
-// app.js 
 require('dotenv').config({ quiet: true });
 
 const express = require('express');
-const adminRouter = require('./routers/admin.router')
+const adminRouter = require('./routers/admin.router');
 const authRouter = require('./routers/auth.router');
 const favoriteRouter = require('./routers/favorite.router');
-const { pool } = require('./db/pg');
-const { AppDataSource } = require('./db/typeorm/data-source');
 const { galaxyRouter, planetRouter } = require('./routers/catalog.router');
 const healthRouter = require('./routers/health.router');
-const app = express();              // app = 一個請求處理器
-const cors = require('cors')
+const cors = require('cors');
+
+const app = express();
 
 const allowURL = [
   'http://localhost:5173',
   'https://2026nodeclass.github.io',
-]
+];
 
 const corsOptions = {
   origin: allowURL,
@@ -32,22 +30,10 @@ app.use((req, res, next) => {
 
 
 
-//------------------------- 路由列表 --------------------------------------
-
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: '伺服器運作中' });
-});
-
-app.use('/api/auth', authRouter); // 登入路由
-app.use('/api/admin',adminRouter); // 後台路由
-app.use('/api/favorites', favoriteRouter); // 登入使用者的收藏路由
-
-
-//--------------------------------------------------------------------------
-
-// 客製 404：永遠放在所有路由「最後」（app.listen 之前）
-// ⚠️ 之後每節新增的路由，都要加在這行【上面】
 app.use('/api/health', healthRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/favorites', favoriteRouter);
 app.use('/api/galaxies', galaxyRouter);
 app.use('/api/planets', planetRouter);
 
@@ -76,46 +62,4 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: '伺服器發生錯誤' });
 });
 
-
-let server;
-
-async function startServer() {
-  await AppDataSource.initialize();
-
-  const PORT = process.env.PORT || 3010;
-
-  server = app.listen(PORT, () => { // 等同 http.createServer(app).listen(3010)
-    console.log(`Server 啟動在 port ${PORT}`);
-  });
-}
-
-async function closeDatabases() {
-  const closingTasks = [pool.end()];
-  if (AppDataSource.isInitialized) {
-    closingTasks.push(AppDataSource.destroy());
-  }
-  await Promise.allSettled(closingTasks);
-}
-
-async function shutdown(signal) {
-  console.log(`收到 ${signal}，正在關閉伺服器`);
-
-  if (!server) {
-    await closeDatabases();
-    process.exit(0);
-  }
-
-  server.close(async (error) => {
-    await closeDatabases();
-    process.exit(error ? 1 : 0);
-  });
-}
-
-process.once('SIGINT', () => shutdown('SIGINT'));
-process.once('SIGTERM', () => shutdown('SIGTERM'));
-
-startServer().catch(async (error) => {
-  console.error('伺服器啟動失敗：', error);
-  await closeDatabases();
-  process.exit(1);
-});
+module.exports = app;

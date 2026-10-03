@@ -1,11 +1,11 @@
 {
-  "name": "creat",
+  "name": "stellar-archive-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Stellar Archive REST API for catalog, authentication, favorites and admin workflows",
+  "main": "server.js",
   "scripts": {
-    "start": "node app.js",
-    "dev":"docker compose up -d --wait && node app.js",
+    "start": "npm run migration:run && node server.js",
+    "dev":"docker compose up -d --wait && node server.js",
     "stop": "docker compose stop",
     "sql": "node db/seed_data.js",
     "migration:create": "typeorm migration:create -o",
@@ -13,7 +13,8 @@
     "migration:show": "typeorm migration:show -d db/typeorm/data-source.js",
     "migration:run": "typeorm migration:run -d db/typeorm/data-source.js",
     "migration:revert": "typeorm migration:revert -d db/typeorm/data-source.js",
-    "test": "node --test"
+    "test": "node --test --test-concurrency=1 tests/*.test.js",
+    "smoke": "node scripts/smoke-test.js"
   },
   "keywords": [],
   "author": "",
